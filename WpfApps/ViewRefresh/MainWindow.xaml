@@ -1,0 +1,54 @@
+﻿<Window x:Class="ViewRefresh.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ViewRefresh"
+        mc:Ignorable="d"
+        Title="View Refresh"
+        Height="350"
+        Width="525">
+
+    <Window.DataContext>
+        <local:MainViewModel />
+    </Window.DataContext>
+
+    <Grid Margin="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Right">
+            <TextBox Text="{Binding TextFilter}"
+                     Width="150"
+                     Margin="4" />
+            <Button Content="Filter"
+                    Click="HandleApplyFilter"
+                    Width="75"
+                    Margin="4" />
+        </StackPanel>
+
+        <DataGrid ItemsSource="{Binding ItemsView}"
+                  Margin="0,4"
+                  Grid.Row="1"></DataGrid>
+
+        <StackPanel Orientation="Vertical"
+                    Grid.Column="1"
+                    Grid.Row="1">
+            <Button Content="Change Items"
+                    Click="HandleChangeItems"
+                    Width="100"
+                    Margin="4" />
+            <Button Content="Remove Items"
+                    Click="HandleRemoveItems"
+                    Width="100"
+                    Margin="4" />
+        </StackPanel>
+    </Grid>
+</Window>
