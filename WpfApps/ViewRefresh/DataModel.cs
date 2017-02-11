@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Collections.ObjectModel;
     using System.ComponentModel;
+    using System.Diagnostics;
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
@@ -146,34 +147,57 @@
             this.itemsSource.Clear();
         }
 
-        private void RefreshItems(IEnumerable<DataModel> items)
+        private void RefreshItems(IEnumerable<DataModel> data)
         {
-            var itemUpdates = from dataModel in items
+            var numAdded = 0;
+            var numRemoved = 0;
+            var numReused = 0;
+
+            var itemUpdates = from dataModel in data
                               join viewModel in this.itemsSource on dataModel.Id equals viewModel.Data.Id into viewModels
                               from viewModel in viewModels.DefaultIfEmpty()
                               select new { dataModel, viewModel };
 
-            var newItems = new List<DataViewModel>();
+            var newData = new Stack<DataModel>();
+            var updatedItems = new List<DataViewModel>();
             foreach (var itemUpdate in itemUpdates)
             {
                 if (itemUpdate.viewModel == null)
                 {
-                    var newViewModel = new DataViewModel { Data = itemUpdate.dataModel };
-                    this.itemsSource.Add(newViewModel);
-                    newItems.Add(newViewModel);
+                    newData.Push(itemUpdate.dataModel);
                 }
                 else
                 {
                     itemUpdate.viewModel.Data = itemUpdate.dataModel;
                     RefreshItem(itemUpdate.viewModel);
-                    newItems.Add(itemUpdate.viewModel);
+                    numReused++;
+                    updatedItems.Add(itemUpdate.viewModel);
                 }
             }
 
-            foreach (var obsoleteItem in this.itemsSource.ToArray().Except(newItems))
+            var obsoleteItems = this.itemsSource.Except(updatedItems).ToArray();
+            foreach (var obsoleteItem in obsoleteItems)
             {
-                this.itemsSource.Remove(obsoleteItem);
+                if (newData.Any())
+                {
+                    obsoleteItem.Data = newData.Pop();
+                    RefreshItem(obsoleteItem);
+                    numReused++;
+                }
+                else
+                {
+                    this.itemsSource.Remove(obsoleteItem);
+                    numRemoved++;
+                }
             }
+
+            foreach (var dataModel in newData)
+            {
+                this.itemsSource.Add(new DataViewModel { Data = dataModel });
+                numAdded++;
+            }
+
+            Debug.WriteLine($"Items update: {numReused} reused, {numRemoved} removed, {numAdded} added");
         }
 
         private void RefreshItem(object item)
